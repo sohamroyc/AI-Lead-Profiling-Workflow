@@ -1,4 +1,4 @@
-# 🚀 AI-Powered Lead Profiling & Sales Automation Workflow
+# AI-Powered Lead Profiling & Sales Automation Workflow
 
 An end-to-end AI automation system that captures website leads, analyzes customer intent using Google Gemini, classifies and prioritizes leads, stores structured data in Google Sheets, and automatically notifies the sales team via Gmail.
 
@@ -161,7 +161,7 @@ AI-Lead-Profiling-Workflow/
 
 ## Website
 
-> Add your deployed Lovable URL here.
+> [Add your deployed Lovable URL here.](https://id-preview--e3f70ebc-c715-4892-9c4c-99b37edbf143.lovable.app/)
 
 ## Workflow
 
@@ -187,17 +187,6 @@ n8n/Lead-Scoring-Routing.json
 
 ---
 
-# 🎯 Use Cases
-
-- Sales Automation
-- AI Lead Qualification
-- Customer Inquiry Routing
-- CRM Data Enrichment
-- Business Process Automation
-- Marketing Lead Scoring
-
----
-
 # 📄 License
 
 This project is licensed under the MIT License.
@@ -210,4 +199,3 @@ This project is licensed under the MIT License.
 
 B.Tech Computer Science Engineering
 
-AI | Automation | Full Stack Development | Workflow Engineering
