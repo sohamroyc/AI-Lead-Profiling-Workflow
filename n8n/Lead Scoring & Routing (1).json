@@ -1,0 +1,442 @@
+{
+  "name": "Lead Scoring & Routing",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "75e1595d-8663-4852-a9a3-e0d7d15a3e4c",
+      "name": "Website Form Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        112
+      ],
+      "webhookId": "6df6fc40-4bd9-4715-a9ae-93cf68b95f61"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "name",
+              "name": "name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "email",
+              "name": "email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "company",
+              "name": "company",
+              "value": "={{ $json.body.company }}",
+              "type": "string"
+            },
+            {
+              "id": "phone",
+              "name": "phone",
+              "value": "={{ $json.body.phone }}",
+              "type": "string"
+            },
+            {
+              "id": "budget",
+              "name": "budget",
+              "value": "={{ $json.body.budget }}",
+              "type": "string"
+            },
+            {
+              "id": "message",
+              "name": "message",
+              "value": "={{ $json.body.message }}",
+              "type": "string"
+            },
+            {
+              "id": "submittedAt",
+              "name": "submittedAt",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "5d73ba1c-1009-44ae-94eb-022ceb497383",
+      "name": "Clean Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a B2B sales lead scoring assistant. Score and route the following inbound lead.\n\nName: {{ $json.name }}\nEmail: {{ $json.email }}\nCompany: {{ $json.company }}\nPhone: {{ $json.phone }}\nStated budget: {{ $json.budget }}\nMessage: {{ $json.message }}\n\nScore 0-100 based on buying intent, budget, company fit, and urgency. Assign priority (Hot/Warm/Cold) and route to the correct team.",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "id": "c22f2f19-29fc-40d0-83e2-577a325f3c20",
+      "name": "Score Lead",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        448,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "id": "9afa9442-dda5-4034-8960-240c4ebcdfa6",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        320
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "gSnpK65g4iudCZ8t",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\"type\":\"object\",\"properties\":{\"score\":{\"type\":\"number\",\"description\":\"Lead quality score from 0 to 100\"},\"priority\":{\"type\":\"string\",\"enum\":[\"Hot\",\"Warm\",\"Cold\"],\"description\":\"Lead priority tier\"},\"category\":{\"type\":\"string\",\"description\":\"Segment or industry category for the lead\"},\"assignedTeam\":{\"type\":\"string\",\"enum\":[\"Enterprise Sales\",\"SMB Sales\",\"Nurture\"],\"description\":\"Team the lead should be routed to\"},\"reasoning\":{\"type\":\"string\",\"description\":\"Short explanation of the score and routing decision\"}},\"required\":[\"score\",\"priority\",\"category\",\"assignedTeam\",\"reasoning\"]}"
+      },
+      "id": "7eaafd7c-33d9-4ce1-9606-c913c36eba67",
+      "name": "Lead Score Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "1gqvZtuXBF6U3Tgbwa4SyQaFDJo0qVOzFYdyVfUsq_Js",
+          "cachedResultName": "leads"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gid=0",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "submittedAt": "={{ $('Clean Data').item.json.submittedAt }}",
+            "name": "={{ $('Clean Data').item.json.name }}",
+            "email": "={{ $('Clean Data').item.json.email }}",
+            "company": "={{ $('Clean Data').item.json.company }}",
+            "phone": "={{ $('Clean Data').item.json.phone }}",
+            "budget": "={{ $('Clean Data').item.json.budget }}",
+            "message ": "={{ $('Clean Data').item.json.message }}",
+            "score": "={{ $('Score Lead').item.json.output.score }}",
+            "priority ": "={{ $('Score Lead').item.json.output.priority }}",
+            "category": "={{ $('Score Lead').item.json.output.category }}",
+            "assignedTeam": "={{ $('Score Lead').item.json.output.assignedTeam }}",
+            "reasoning": "={{ $('Score Lead').item.json.output.reasoning }}"
+          },
+          "matchingColumns": [
+            "output"
+          ],
+          "schema": [
+            {
+              "id": "submittedAt",
+              "displayName": "submittedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "budget",
+              "displayName": "budget",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message ",
+              "displayName": "message ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "priority ",
+              "displayName": "priority ",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "assignedTeam",
+              "displayName": "assignedTeam",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "reasoning",
+              "displayName": "reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "72cb6eb4-52e5-443f-948f-f2167685e55d",
+      "name": "Append to Leads Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        800,
+        112
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "6fpZQht7vOGUUgTR",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "sohamroychowdhury2004@gmail.com",
+        "subject": "=New {{ $('Score Lead').item.json.output.priority }} lead: {{ $('Clean Data').item.json.name }} ({{ $('Clean Data').item.json.company }})",
+        "message": "=<h2>New Lead Scored</h2><p><strong>Score:</strong> {{ $('Score Lead').item.json.output.score }}/100 &nbsp;|&nbsp; <strong>Priority:</strong> {{ $('Score Lead').item.json.output.priority }} &nbsp;|&nbsp; <strong>Assigned Team:</strong> {{ $('Score Lead').item.json.output.assignedTeam }}</p><p><strong>Category:</strong> {{ $('Score Lead').item.json.output.category }}</p><p><strong>Reasoning:</strong> {{ $('Score Lead').item.json.output.reasoning }}</p><hr><p><strong>Name:</strong> {{ $('Clean Data').item.json.name }}<br><strong>Email:</strong> {{ $('Clean Data').item.json.email }}<br><strong>Company:</strong> {{ $('Clean Data').item.json.company }}<br><strong>Phone:</strong> {{ $('Clean Data').item.json.phone }}<br><strong>Budget:</strong> {{ $('Clean Data').item.json.budget }}</p><p><strong>Message:</strong><br>{{ $('Clean Data').item.json.message }}</p>",
+        "options": {}
+      },
+      "id": "24c6f8bb-69d2-4c38-ba4c-6e01265fea9e",
+      "name": "Notify Sales Team",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1024,
+        112
+      ],
+      "webhookId": "984d5478-56a0-4ac8-addf-641739589b94",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Mx7j5z2nu7mBjjIi",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"status\": \"received\", \"priority\": \"{{ $('Score Lead').item.json.output.priority }}\", \"score\": {{ $('Score Lead').item.json.output.score }} }",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "cf672028-6be0-4e25-9cdd-f8f3d2cba5c7",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1248,
+        112
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Website Form Webhook": {
+      "main": [
+        [
+          {
+            "node": "Clean Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Data": {
+      "main": [
+        [
+          {
+            "node": "Score Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Score Lead": {
+      "main": [
+        [
+          {
+            "node": "Append to Leads Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Score Lead",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Score Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Score Lead",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append to Leads Sheet": {
+      "main": [
+        [
+          {
+            "node": "Notify Sales Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Sales Team": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "8f4e535f-5ab4-491b-bce6-beb78cf8376f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "98e06af5f59ee81741e28197b9597a99a49888711d0e219d7583536ca886efdd"
+  },
+  "nodeGroups": [],
+  "id": "RF8crVMv5r1CjT4Z",
+  "tags": []
+}
