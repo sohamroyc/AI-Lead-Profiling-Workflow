@@ -161,7 +161,7 @@ AI-Lead-Profiling-Workflow/
 
 ## Website
 
-> [Add your deployed Lovable URL here.](https://id-preview--e3f70ebc-c715-4892-9c4c-99b37edbf143.lovable.app/)
+> [demo](https://id-preview--e3f70ebc-c715-4892-9c4c-99b37edbf143.lovable.app/)
 
 ## Workflow
 
